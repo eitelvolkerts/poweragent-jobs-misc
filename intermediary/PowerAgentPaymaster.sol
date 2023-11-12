@@ -133,7 +133,8 @@ contract PAPaymaster is Ownable {
     function registerJob(IAgent.RegisterJobParams calldata params_,
         IAgent.Resolver calldata resolver_,
         bytes calldata preDefinedCalldata_) public {
-            agent.registerJob(params_, resolver_, preDefinedCalldata_);
+            (bytes32 jk, ) = agent.registerJob(params_, resolver_, preDefinedCalldata_);
+            keyOwners[jk] = msg.sender;
         }
     
 
