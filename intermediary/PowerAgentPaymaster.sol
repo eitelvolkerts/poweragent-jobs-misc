@@ -137,6 +137,13 @@ contract PAPaymaster is Ownable {
             keyOwners[jk] = msg.sender;
         }
     
+    function transferInternalJobOwnership(bytes32 _jk, address _to) public {
+        if (msg.sender != keyOwners[_jk]){
+            revert("You've no right to modify this job");
+        }
+        keyOwners[_jk] = _to;
+    }
+    
 
     function updateJob(
         bytes32 jobKey_,
