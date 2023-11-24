@@ -58,9 +58,9 @@ contract validatorClaimResolverRegistry is Ownable{
         flag = false;
         for (uint256 i=0; i<registeredValidators.length; i++){
             claimer = registeredValidators[i];
-            if (claimTarget.withdrawableAmount(this.owner()) >= threshold){
+            if (claimTarget.withdrawableAmount(claimer) >= resolveThresholds[claimer]){
                 flag = true;
-                toPass.push(claimTarget);
+                toPass.push(claimer);
             }
         }
         cdata = abi.encodeWithSelector(claimTarget.claimWithdrawals.selector, toPass);
