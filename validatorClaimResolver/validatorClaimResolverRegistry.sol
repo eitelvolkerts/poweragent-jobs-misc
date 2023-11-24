@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 interface IGVC {
     function withdrawableAmount(address) external view returns (uint256);  
     function claimWithdrawal(address _address) external;
+    function claimWithdrawals(address[] calldata _addresses) external;
 }
 
 contract validatorClaimResolverRegistry is Ownable{
@@ -14,7 +15,6 @@ contract validatorClaimResolverRegistry is Ownable{
     IGVC public claimTarget;
     mapping(address=>uint256) public resolveThresholds;
     address[] public registeredValidators;
-    bool public thresholdLocked;
 
     //event changedThreshold(uint256 indexed oldThreshold, uint256 indexed newThreshold);
     event registeredUser(address indexed newUser);
@@ -24,7 +24,6 @@ contract validatorClaimResolverRegistry is Ownable{
     constructor (address _claimTarget) {
         //threshold = _threshold;
         claimTarget = IGVC(_claimTarget);
-        thresholdLocked = 0;
     }
 
     function registerForResolution(uint256 _threshold) public {
@@ -54,16 +53,29 @@ contract validatorClaimResolverRegistry is Ownable{
 
     function resolve() public view returns (bool flag, bytes memory cdata) {
         address claimer;
-        address[] toPass;
+        address[] memory toPass = new address[](registeredValidators.length);
         flag = false;
         for (uint256 i=0; i<registeredValidators.length; i++){
             claimer = registeredValidators[i];
             if (claimTarget.withdrawableAmount(claimer) >= resolveThresholds[claimer]){
                 flag = true;
-                toPass.push(claimer);
+                toPass[i] = claimer;
             }
         }
         cdata = abi.encodeWithSelector(claimTarget.claimWithdrawals.selector, toPass);
+    }
+
+    function lazyResolver() public view returns (bool flag, bytes memory cdata) {
+        address claimer;
+        flag = false;
+        for (uint256 i=0; i<registeredValidators.length; i++){
+            claimer = registeredValidators[i];
+            if (claimTarget.withdrawableAmount(claimer) >= resolveThresholds[claimer]){
+                flag = true;
+                cdata = abi.encodeWithSelector(claimTarget.claimWithdrawals.selector, registeredValidators);
+                break;
+            }
+        }
     }
 
 }
